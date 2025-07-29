@@ -1,5 +1,6 @@
-import { useMedplum, useMedplumProfile, DateTimeInput } from '@medplum/react';
+import { useMedplum, useMedplumProfile } from '@medplum/react';
 import { TextInput, Button, Paper, Title, Group, Select } from '@mantine/core';
+import { DatePickerInput } from '@mantine/dates';
 import { useEffect, useState } from 'react';
 import { showNotification } from '@mantine/notifications';
 
@@ -13,7 +14,7 @@ export function NewPatientPage() {
     caregiverName: '',
     caregiverEmail: '',
     companyId: '',
-    joinDate: '',
+    joinDate: null as any,
   });
 
   const [companies, setCompanies] = useState<any[]>([]);
@@ -40,7 +41,7 @@ export function NewPatientPage() {
         extension: formData.joinDate
           ? [{
               url: 'http://example.org/fhir/StructureDefinition/patient-join-date',
-              valueDate: formData.joinDate,
+              valueDate: formData.joinDate.toISOString().split('T')[0],
             }]
           : undefined,
       });
@@ -50,12 +51,8 @@ export function NewPatientPage() {
           'telecom': formData.caregiverEmail,
         });
 
-        let relatedPerson;
-
-        if (existing.length > 0) {
-          relatedPerson = existing[0];
-        } else {
-          relatedPerson = await medplum.createResource({
+        if (existing.length <= 0) {
+          const relatedPerson = await medplum.createResource({
             resourceType: 'RelatedPerson',
             name: [{ text: formData.caregiverName }],
             telecom: [{ system: 'email', value: formData.caregiverEmail }],
@@ -68,6 +65,13 @@ export function NewPatientPage() {
             }],
             patient: { reference: `Patient/${patient.id}` },
           });
+
+          showNotification({
+            title: 'Caregiver created',
+            message: `Caregiver ${relatedPerson.name?.[0]?.text} registered successfully.`,
+            color: 'green',
+          });
+
         }
       }
 
@@ -83,7 +87,7 @@ export function NewPatientPage() {
         caregiverName: '',
         caregiverEmail: '',
         companyId: '',
-        joinDate: '',
+        joinDate: null,
       });
     } catch (err) {
       console.error(err);
@@ -135,19 +139,16 @@ export function NewPatientPage() {
             label: org.name || org.id,
           }))}
           value={formData.companyId}
-          onChange={(value) => setFormData({ ...formData, companyId: value || '' })}
+          onChange={(value) => setFormData({ ...formData, companyId: value ?? '' })}
         />
-        <DateTimeInput
+
+        <DatePickerInput
           label="Join Date"
           placeholder="Date the patient joined the company"
-          name="joinDate"
-          onChange={(date) =>
-            setFormData({
-              ...formData,
-              joinDate: date.split('T')[0],
-            })
-          }
+          value={formData.joinDate}
+          onChange={(date) => setFormData({ ...formData, joinDate: date })}
         />
+
         <Group mt="md">
           <Button type="submit">Create Patient</Button>
         </Group>

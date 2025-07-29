@@ -2,7 +2,10 @@ import { MantineProvider, createTheme } from '@mantine/core';
 import '@mantine/core/styles.css';
 import { MedplumClient } from '@medplum/core';
 import { MedplumProvider } from '@medplum/react';
+import { Notifications } from '@mantine/notifications';
 import '@medplum/react/styles.css';
+import '@mantine/dates/styles.css';
+import '@mantine/notifications/styles.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
@@ -40,6 +43,7 @@ root.render(
     <BrowserRouter>
       <MedplumProvider medplum={medplum}>
         <MantineProvider theme={theme}>
+          <Notifications position="top-right" zIndex={2077} />
           <App />
         </MantineProvider>
       </MedplumProvider>
